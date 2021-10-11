@@ -13,7 +13,7 @@ const getInfoAboutTheSubwayStations = async () => {
 const groupTheJadeSubwayLines = allSubwayStations => {
     return allSubwayStations.reduce((acc, subwayStation) => {
         const { _linha } = subwayStation
-        if(_linha === '13-Jade Serviço Conect' || _linha === '13-Jade-Airport Express') {
+        if (_linha === '13-Jade Serviço Conect' || _linha === '13-Jade-Airport Express') {
             subwayStation._linha = '13-Jade'
             acc.push(subwayStation)
         } else {
@@ -26,7 +26,7 @@ const groupTheJadeSubwayLines = allSubwayStations => {
 const groupTheCoralSubwayLines = allSubwayStations => {
     return allSubwayStations.reduce((acc, subwayStation) => {
         const { _linha } = subwayStation
-        if(_linha === '11-Coral (Guaianazes-Estudantes)' || _linha === '11-Coral-Expresso Leste (Luz-Guaianazes)') {
+        if (_linha === '11-Coral (Guaianazes-Estudantes)' || _linha === '11-Coral-Expresso Leste (Luz-Guaianazes)') {
             subwayStation._linha = '11-Coral'
             acc.push(subwayStation)
         } else {
@@ -39,31 +39,31 @@ const groupTheCoralSubwayLines = allSubwayStations => {
 const groupSubwayStationsBySubwayLines = allSubwayStations => {
     return allSubwayStations.reduce((acc, subwayStation) => {
         const { _linha } = subwayStation
-        acc[_linha] = acc[_linha] || [] 
+        acc[_linha] = acc[_linha] || []
         acc[_linha].push(subwayStation)
         return { ...acc }
     }, [])
 }
 
-const main = async () => {
-    let allSubwayStations = await getInfoAboutTheSubwayStations()
+// Procura pelo índice da estação "Guaianazes" e atribui à "foundIndex".
+// Neste caso, dois índices são encontrados, já que "Guaianazes" se repete duas vezes. 
+// Então o índice da última repetição é atribuído à "foundIndex".
+const removeRepeatedSubwayStation = allSubwayStations => {
     let foundIndex = null
-
-    allSubwayStations = groupTheJadeSubwayLines(allSubwayStations)
-    allSubwayStations = groupTheCoralSubwayLines(allSubwayStations)
     
-    // Procura pelo índice da estação "Guaianazes" e atribui à "foundIndex".
-    // Neste caso, dois índices são encontrados, já que "Guaianazes" se repete duas vezes. Então o índice
-    // da última repetição é atribuído à "foundIndex"
     allSubwayStations.forEach((subwayStation, index) => {
         const { _linha, _nome } = subwayStation
-        if(_linha === '11-Coral' && _nome === 'Guaianazes') {
-            foundIndex = index
-        }
+        if (_linha === '11-Coral' && _nome === 'Guaianazes') foundIndex = index
     })
-
     allSubwayStations.splice(foundIndex, 1)
+    return allSubwayStations
+}
 
+const main = async () => {
+    let allSubwayStations = await getInfoAboutTheSubwayStations()
+    allSubwayStations = groupTheJadeSubwayLines(allSubwayStations)
+    allSubwayStations = groupTheCoralSubwayLines(allSubwayStations)
+    allSubwayStations = removeRepeatedSubwayStation(allSubwayStations)
     const subwayStationsGroupByLines = groupSubwayStationsBySubwayLines(allSubwayStations)
     console.log(subwayStationsGroupByLines)
 }
