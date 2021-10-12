@@ -1,4 +1,4 @@
-const getInfoAboutTheSubwayStations = async () => {
+const getSubwayStations = async () => {
     const url = 'https://private-fcfe0-santandercoders809.apiary-mock.com/stations'
     const response = await fetch(url)
     const data = await response.json()
@@ -7,14 +7,14 @@ const getInfoAboutTheSubwayStations = async () => {
     return estacao
 }
 
-// Troca o nome das linhas "13-Jade Serviço Conect" e "13-Jade-Airport Express" para "13-Jade".
-// Com isso, todas as estações das linhas "13-Jade Serviço Conect" e "13-Jade-Airport Express"
-// passam a pertencer à linha "13-Jade".
-const groupTheJadeSubwayLines = allSubwayStations => {
+// Troca o nome das linhas "subwayLine1" e "subwayLine2" para "subwayLine". Com isso, todas as estações das 
+// linhas "subwayLine1" e "subwayLine2" passam a pertencer à linha "subwayLine".
+const groupSubwayLines = (allSubwayStations, subwayLinesToBeGrouped, subwayLine) => {
+    const [ subwayLine1, subwayLine2 ] = [ ...subwayLinesToBeGrouped ]
     return allSubwayStations.reduce((acc, subwayStation) => {
         const { _linha } = subwayStation
-        if (_linha === '13-Jade Serviço Conect' || _linha === '13-Jade-Airport Express') {
-            subwayStation._linha = '13-Jade'
+        if (_linha === subwayLine1 || _linha === subwayLine2 ) {
+            subwayStation._linha = subwayLine
             acc.push(subwayStation)
         } else {
             acc.push(subwayStation)
@@ -23,17 +23,17 @@ const groupTheJadeSubwayLines = allSubwayStations => {
     }, [])
 }
 
-const groupTheCoralSubwayLines = allSubwayStations => {
-    return allSubwayStations.reduce((acc, subwayStation) => {
-        const { _linha } = subwayStation
-        if (_linha === '11-Coral (Guaianazes-Estudantes)' || _linha === '11-Coral-Expresso Leste (Luz-Guaianazes)') {
-            subwayStation._linha = '11-Coral'
-            acc.push(subwayStation)
-        } else {
-            acc.push(subwayStation)
-        }
-        return acc
-    }, [])
+// Procura pelo índice da estação "repeatedSubwayStation" e atribui à "foundIndex".
+// Sempre o índice da última repetição vai ser pegado. Após isso, através do índice encontrado,
+// a estação repetida vai ser retirada do array "allSubwayStations".
+const removeRepeatedSubwayStation = (allSubwayStations, subwayLine, repeatedSubwayStation) => {
+    let foundIndex = null
+    allSubwayStations.forEach((subwayStation, index) => {
+        const { _linha, _nome } = subwayStation
+        if (_linha === subwayLine && _nome === repeatedSubwayStation) foundIndex = index
+    })
+    allSubwayStations.splice(foundIndex, 1)
+    return allSubwayStations
 }
 
 const groupSubwayStationsBySubwayLines = allSubwayStations => {
@@ -45,26 +45,14 @@ const groupSubwayStationsBySubwayLines = allSubwayStations => {
     }, [])
 }
 
-// Procura pelo índice da estação "Guaianazes" e atribui à "foundIndex".
-// Neste caso, dois índices são encontrados, já que "Guaianazes" se repete duas vezes. 
-// Então o índice da última repetição é atribuído à "foundIndex".
-const removeRepeatedSubwayStation = allSubwayStations => {
-    let foundIndex = null
-    
-    allSubwayStations.forEach((subwayStation, index) => {
-        const { _linha, _nome } = subwayStation
-        if (_linha === '11-Coral' && _nome === 'Guaianazes') foundIndex = index
-    })
-    allSubwayStations.splice(foundIndex, 1)
-    return allSubwayStations
-}
-
 const main = async () => {
-    let allSubwayStations = await getInfoAboutTheSubwayStations()
-    allSubwayStations = groupTheJadeSubwayLines(allSubwayStations)
-    allSubwayStations = groupTheCoralSubwayLines(allSubwayStations)
-    allSubwayStations = removeRepeatedSubwayStation(allSubwayStations)
-    const subwayStationsGroupByLines = groupSubwayStationsBySubwayLines(allSubwayStations)
+    const allSubwayStations = await getSubwayStations()
+    const coralSubwayLinesToBeGrouped = ['11-Coral (Guaianazes-Estudantes)', '11-Coral-Expresso Leste (Luz-Guaianazes)']
+    const jadeSubwayLinesToBeGrouped = ['13-Jade Serviço Conect', '13-Jade-Airport Express']
+    const allSubwayStationsWithGroupedCoralSubwayLines = groupSubwayLines(allSubwayStations, coralSubwayLinesToBeGrouped, '11-Coral')
+    const allSubwayStationsWithGroupedJadeSubwayLines = groupSubwayLines(allSubwayStationsWithGroupedCoralSubwayLines, jadeSubwayLinesToBeGrouped, '13-Jade')
+    const allSubwayStationsWithoutRepeatingSubwayStationsBySubwayLines = removeRepeatedSubwayStation(allSubwayStationsWithGroupedJadeSubwayLines, '11-Coral' , 'Guaianazes')
+    const subwayStationsGroupByLines = groupSubwayStationsBySubwayLines(allSubwayStationsWithoutRepeatingSubwayStationsBySubwayLines)
     console.log(subwayStationsGroupByLines)
 }
 
